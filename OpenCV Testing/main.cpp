@@ -26,27 +26,16 @@ void close(const Mat src, Mat dst, Mat element)
 
 Mat process(Mat &img)
 {
-	//fprintf(stderr, "Processing image\n");
-    
-	/* Convert to HSV */
+    // convert to HSV
 	Size size(img.cols, img.rows);
 	Mat hsv(size, CV_8U);
 	cvtColor(img, hsv, CV_BGR2HSV);
     
-	/* Generate mask */
+    // generate mask
 	Mat mask(size.height, size.width, CV_8UC1);
     
     // divided by 2 because opencv uses hue from 0-180 instead of 0-360
     inRange(hsv, Scalar(210/2, 25, 25, 0), Scalar(270/2, 100, 100, 0), mask);
-    
-	//cvReleaseImage(&hsv);
-	//IplImage *tmp = cvCreateImage(size, 8, 1);
-	//cvCopy(mask, tmp, NULL);
-	//return mask;
-    
-	// Perform morphological ops
-	//IplConvKernel *se21 = cvCreateStructuringElementEx(21, 21, 10, 10, CV_SHAPE_RECT, NULL);
-	//IplConvKernel *se11 = cvCreateStructuringElementEx(11, 11, 5,  5,  CV_SHAPE_RECT, NULL);
     
     Point anchor1(10, 10), anchor2(5, 5);
     Size size1(21, 21), size2(11, 11);
@@ -55,74 +44,49 @@ Mat process(Mat &img)
     Mat se11 = getStructuringElement(CV_SHAPE_RECT, size2, anchor2);
 	close(mask, mask, se21);
 	open(mask, mask, se11);
+//
+//    Mat hough_in(size, CV_8U);
+//    mask.copyTo(hough_in);
+//    
+//    medianBlur(hough_in, hough_in, 15);
+//    GaussianBlur(hough_in, hough_in, Size(15, 15), 0, 0);
+//    
+//    Mat circles(size.height, size.width, CV_8UC1);
+//    HoughCircles(hough_in, circles, CV_HOUGH_GRADIENT, 4, size.height/10, 100, 40, 0, 0);
     
-	//IplImage *tmp = cvCreateImage(size, 8, 1);
-	//cvCopy(mask, tmp, NULL);
-	//return mask;
-    
-	// Hough transform
-	//IplImage *hough_in = cvCreateImage(size, 8);
-    Mat hough_in(size, CV_8U);
-    mask.copyTo(hough_in);
-    
-	// CvMemStorage *storage = cvCreateMemStorage(0);
-    
-    //cvSmooth(hough_in, hough_in, CV_GAUSSIAN, 15, 15, 0, 0);
-    medianBlur(hough_in, hough_in, 15);
-    GaussianBlur(hough_in, hough_in, Size(15, 15), 0, 0);
-    
-    Mat circles(size.height, size.width, CV_8UC1);
-    HoughCircles(hough_in, circles, CV_HOUGH_GRADIENT, 4, size.height/10, 100, 40, 0, 0);
-    
-//	CvSeq *circles = cvHoughCircles(
-//                                    hough_in, storage, // input, storage,
-//                                    CV_HOUGH_GRADIENT, 4, size.height/10,
-//                                    // type, 1/scale, min center dists
-//                                    100, 40,           // params1?, param2?
-//                                    0, 0               // min radius, max radius
-//                                    );
-//	cvReleaseMemStorage(&storage);
-    
-    circles.resize(1);
-    
-    for (int i = 0; i < circles.total(); ++i) {
-        Mat p = circles.at<Mat>(i);
-        Point center(round(p.at<double>(0)), round(p.at<double>(1)));
-        Scalar val = cvGet2D(&mask, center.y, center.x);
-        if (val.val[0] < 1) continue;
-        circle(img, center, 3, CV_RGB(0, 255, 0));
-        circle(img, center, round(p.at<double>(2)), CV_RGB(255, 0, 0));
-        circle(mask, center, 3, CV_RGB(0, 255, 0));
-        circle(mask, center, round(p.at<double>(2)), CV_RGB(255, 0, 0));
-    }
-    
-    
-//	// Fancy up output
-//	for (int i = 0; i < circles->total; ++i) {
-//        float *p = (float*) cvGetSeqElem(circles, i);
-//        CvPoint center = cvPoint(cvRound(p[0]), cvRound(p[1]));
-//        CvScalar val = cvGet2D(&mask, center.y, center.x);
+//    for (int i = 0; i < circles.total(); ++i) {
+//        Point2f p = circles.at<Point2f>(i, 0);
+//        Point center(p.x, p.y);
+//        Scalar val = mask.at<Scalar>(center.y, center.x);
+//
+//        // note: whenever this next part fails, it jumps the memory up by about 30MB. perhaps this is related to memory climbs? memory stays constant when this whole for loop is commented.
 //        if (val.val[0] < 1) continue;
-//        cvCircle(&img,  center, 3,             CV_RGB(0,255,0), -1, CV_AA, 0);
-//        cvCircle(&img,  center, cvRound(p[2]), CV_RGB(255,0,0),  3, CV_AA, 0);
-//        cvCircle(mask, center, 3,             CV_RGB(0,255,0), -1, CV_AA, 0);
-//        cvCircle(mask, center, cvRound(p[2]), CV_RGB(255,0,0),  3, CV_AA, 0);
-//	}
+//        
+//        circle(img, center, 3, CV_RGB(0, 255, 0));
+//        //circle(img, center, roundf(p[2]), CV_RGB(255, 0, 0));
+//        circle(mask, center, 3, CV_RGB(0, 255, 0));
+//        //circle(mask, center, roundf(p[2]), CV_RGB(255, 0, 0));
+//    }
     
-	return hough_in;
+	//return hough_in;
+    return mask;
 }
 
-void test_live(VideoCapture cam)
+void test_live()
 {
-	while (1) {
+    VideoCapture cam(0);
+	for (;;) {
         Mat img;
         cam.read(img);
         Mat out = process(img);
         
-        imshow("img", img);
+        flip(img, img, 1);
+        flip(out, out, 1);
+        
+        //imshow("img", img);
         imshow("out", out);
         
-		if (waitKey(30) == 27)
+		if (waitKey(10) == 27)
 			return;
 	}
 }
@@ -130,13 +94,9 @@ void test_live(VideoCapture cam)
 int main()
 {
     namedWindow("out");
-    moveWindow("out", 10, 10);
     namedWindow("img");
-    moveWindow("img", 10, 10);
     
-    VideoCapture cam(0);
-    
-    test_live(cam);
+    test_live();
     
 	return 0;
 }
