@@ -38,10 +38,9 @@ Mat process(Mat &img)
     // H: (0-360, 0-180)
     // S: (0-100, 0-255)
     // V: (0-100, 0-255)
-    int kH = 0.5, kS = 2.55, kV = 2.55;
-                        //210/2, 25, 25, 0      270/2, 100, 100, 0
-    inRange(hsv, Scalar(kH * 0, kS * 0, kV * 0), Scalar(kH * 360, kS * 100, kV * 10), mask);
-    
+    float kH = 0.5, kS = 2.55, kV = 2.55;
+    inRange(hsv, Scalar(kH * 200, kS * 40, kV * 20), Scalar(kH * 245, kS * 80, kV * 65), mask);
+
     Point anchor1(10, 10), anchor2(5, 5);
     Size size1(21, 21), size2(11, 11);
     
@@ -53,28 +52,26 @@ Mat process(Mat &img)
     Mat hough_in(size, CV_8U);
     mask.copyTo(hough_in);
 
-    GaussianBlur(hough_in, hough_in, Size(15, 15), 0, 0);
+//    GaussianBlur(hough_in, hough_in, Size(15, 15), 0, 0);
+//    
+//    Mat circles(size.height, size.width, CV_8UC1);
+//    HoughCircles(hough_in, circles, CV_HOUGH_GRADIENT, 4, size.height/10, 100, 40, 0, 0);
+//  
+//    for (int i = 0; i < circles.total(); ++i) {
+//        Point2f p(circles.at<Point2f>(i, 0));
+//        Point center(p.x, p.y);
+//        Scalar val(mask.at<Scalar>(center.y, center.x));
+//
+//        // note: whenever this next part fails, it jumps the memory up by about 30MB. perhaps this is related to memory climbs? memory stays constant when this whole for loop is commented.
+//        if (val.val[0] < 1) continue;
+//        
+//        circle(img, center, 3, CV_RGB(0, 255, 0));
+//        //circle(img, center, roundf(p[2]), CV_RGB(255, 0, 0));
+//        circle(mask, center, 3, CV_RGB(0, 255, 0));
+//        //circle(mask, center, roundf(p[2]), CV_RGB(255, 0, 0));
+//    }
     
-    /*
-    Mat circles(size.height, size.width, CV_8UC1);
-    HoughCircles(hough_in, circles, CV_HOUGH_GRADIENT, 4, size.height/10, 100, 40, 0, 0);
-  
-    for (int i = 0; i < circles.total(); ++i) {
-        Point2f p(circles.at<Point2f>(i, 0));
-        Point center(p.x, p.y);
-        Scalar val(mask.at<Scalar>(center.y, center.x));
-
-        // note: whenever this next part fails, it jumps the memory up by about 30MB. perhaps this is related to memory climbs? memory stays constant when this whole for loop is commented.
-        if (val.val[0] < 1) continue;
-        
-        circle(img, center, 3, CV_RGB(0, 255, 0));
-        //circle(img, center, roundf(p[2]), CV_RGB(255, 0, 0));
-        circle(mask, center, 3, CV_RGB(0, 255, 0));
-        //circle(mask, center, roundf(p[2]), CV_RGB(255, 0, 0));
-    }
-     */
-    
-	return hough_in;
+    return hough_in;
 }
 
 void test_live()
