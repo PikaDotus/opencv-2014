@@ -70,7 +70,7 @@ Mat detectHot(Mat &img)
     return mask;
 }
 
-Mat detectBall(Mat &img)
+void detectBall(Mat &img)
 {
     const float   hueLow = 220,   satLow = 50,    valLow = 15,
     hueHigh = 235,  satHigh = 80,   valHigh = 88;
@@ -113,10 +113,6 @@ Mat detectBall(Mat &img)
         if (a > area) contourNum = i;
     }
     
-    // if there are no contours, just return
-    if (contourNum == -1) return mask;
-    
-    
     // DANNYIDEA: do expensive ball find, then track the ball
     
     
@@ -128,16 +124,13 @@ Mat detectBall(Mat &img)
     float radiusEnclosing = 0;
     minEnclosingCircle(Mat(masterContour), centerEnclosing, radiusEnclosing);
     
-    // draw the enclosing circle and WHAT ARE POLYLINES THERE FOR
-    circle(mask, centerEnclosing, round(radiusEnclosing), Scalar(255), 1, CV_AA);
-    polylines(mask, masterContour, true, Scalar(200));
-    
-    return mask;
+    circle(img, centerEnclosing, round(radiusEnclosing), Scalar(0, 255, 0), 2, CV_AA);
+    polylines(img, masterContour, true, Scalar(0, 255, 255), 2, CV_AA);
 }
 
 void test_hot()
 {
-    Mat img = imread("/Users/logan/image2.png");
+    Mat img = imread("/Users/logan/roboimgs/image2.png");
     Mat out = detectHot(img);
     
     for (;;) {
@@ -156,13 +149,11 @@ void test_ball()
 	for (;;) {
         Mat img;
         cam.read(img);
-        Mat out = detectBall(img);
+        detectBall(img);
         
         flip(img, img, 1);
-        flip(out, out, 1);
         
-        //imshow("img", img);
-        imshow("out", out);
+        imshow("img", img);
         
 		if (waitKey(10) == 27)
 			return;
@@ -174,8 +165,8 @@ int main()
     namedWindow("out");
     namedWindow("img");
     
-    test_hot();
-    //test_ball();
+    //test_hot();
+    test_ball();
     
 	return 0;
 }
