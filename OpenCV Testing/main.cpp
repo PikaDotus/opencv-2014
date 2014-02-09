@@ -30,10 +30,10 @@ void close(const Mat src, Mat dst, Mat element)
 // V: (0-100, 0-255)
 const float kH = 0.5, kS = 2.55, kV = 2.55;
 
-Mat detectHot(Mat &img)
+void detectHot(Mat &img)
 {
-    const float   hueLow = 160,   satLow = 90,    valLow = 55,
-    hueHigh = 175,  satHigh = 100,   valHigh = 65;
+    const float   hueLow = 160,   satLow = 25,    valLow = 90,
+    hueHigh = 190,  satHigh = 75,   valHigh = 100;
     
     // converts img to HSV colors
 	Size size(img.cols, img.rows);
@@ -56,18 +56,21 @@ Mat detectHot(Mat &img)
     int contourNum = -1;
     for (int i = 0; i < contours.size(); ++i) {
         vector<Point> a = contours[i];
-        polylines(mask, a, false, Scalar(255));
+        polylines(img, a, false, Scalar(0, 0, 255), 1, CV_AA);
         
         RotatedRect rect(minAreaRect(a));
-        //circle(mask, rect.center, 2, Scalar(255));
+        
+        Point2f vertices[4];
+        rect.points(vertices);
+        for (int k = 0; k < 4; ++k) {
+            line(img, vertices[k], vertices[(k + 1) % 4], Scalar(0, 255, 255), 2);
+        }
     }
     
     // if there are no contours, just return
-    if (contourNum == -1) return mask;
+    if (contourNum == -1) return;
     
-    polylines(mask, contours, false, Scalar(255));
-    
-    return mask;
+    //polylines(img, contours, false, Scalar(0, 0, 255), 2, CV_AA);
 }
 
 void detectBall(Mat &img)
@@ -113,6 +116,10 @@ void detectBall(Mat &img)
         if (a > area) contourNum = i;
     }
     
+    // if no contours, return
+    if (contourNum == -1) return;
+    
+    
     // DANNYIDEA: do expensive ball find, then track the ball
     
     
@@ -130,12 +137,15 @@ void detectBall(Mat &img)
 
 void test_hot()
 {
-    Mat img = imread("/Users/logan/roboimgs/image2.png");
-    Mat out = detectHot(img);
+    VideoCapture cam(0);
     
     for (;;) {
-        //imshow("img", img);
-        imshow("out", out);
+        Mat img;
+        cam.read(img);
+        detectHot(img);
+        
+        flip(img, img, 1);
+        imshow("img", img);
             
         if (waitKey(10) == 27)
             return;
@@ -152,7 +162,6 @@ void test_ball()
         detectBall(img);
         
         flip(img, img, 1);
-        
         imshow("img", img);
         
 		if (waitKey(10) == 27)
@@ -165,8 +174,8 @@ int main()
     namedWindow("out");
     namedWindow("img");
     
-    //test_hot();
-    test_ball();
+    test_hot();
+    //test_ball();
     
 	return 0;
 }
