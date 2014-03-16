@@ -34,7 +34,7 @@ void detectHot(Mat &img)
 {
     // bounding values
     const float   hueLow = 170,   satLow = 17,    valLow = 90,
-    hueHigh = 190,  satHigh = 65,   valHigh = 100;
+    hueHigh = 190,  satHigh = 95,   valHigh = 100;
     
     // converts img to HSV colors
 	Size size(img.cols, img.rows);
@@ -70,18 +70,20 @@ void detectHot(Mat &img)
         }
     }
     
-    vector<Point> largestContour = contours[largestArea[0]];
-    vector<Point> secondLargestContour = contours[secondLargestArea[0]];
+    if (contours.size() >= 2) {
+        vector<Point> largestContour = contours[largestArea[0]];
+        vector<Point> secondLargestContour = contours[secondLargestArea[0]];
 
-    drawRectangles(largestContour, img);
-    drawRectangles(secondLargestContour, img);
-    
-    int numGoals(1);
-    if (largestArea[1] > 500 && secondLargestArea[1] > 500) {
-        numGoals = 2;
+        drawRectangles(largestContour, img);
+        drawRectangles(secondLargestContour, img);
+        
+        int numGoals(1);
+        if (largestArea[1] > 500 && secondLargestArea[1] > 500) {
+            numGoals = 2;
+        }
+        
+        putText(img, std::to_string(numGoals), Point(img.cols/2, img.rows/2), FONT_HERSHEY_SIMPLEX, 4, Scalar(30, 30, 255), 3);
     }
-    
-    putText(img, std::to_string(numGoals), Point(img.cols/2, img.rows/2), FONT_HERSHEY_SIMPLEX, 4, Scalar(30, 30, 255), 3);
 }
 
 void test_hot()
@@ -102,7 +104,7 @@ void test_hot()
         
         if (pressed == 27)
             return;
-        else if (pressed != -1 && curImgNum <= 6382)
+        else if (pressed != -1 && curImgNum < 6382)
             ++curImgNum;
     }
 }
