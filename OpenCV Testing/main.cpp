@@ -9,6 +9,7 @@
 #include <iostream>
 #include "opencv2/opencv.hpp"
 #include <stdio.h>
+#include <chrono>
 
 using namespace cv;
 
@@ -30,7 +31,7 @@ void drawRectangles(vector<Point> contour, Mat dst) {
 // V: (0-100, 0-255)
 const float kH = 0.5, kS = 2.55, kV = 2.55;
 
-void detectHot(Mat &img)
+int detectHot(Mat &img)
 {
     // bounding values
     const float   hueLow = 170,   satLow = 17,    valLow = 90,
@@ -71,50 +72,68 @@ void detectHot(Mat &img)
     }
     
     if (contours.size() >= 2) {
-        vector<Point> largestContour = contours[largestArea[0]];
-        vector<Point> secondLargestContour = contours[secondLargestArea[0]];
-
-        drawRectangles(largestContour, img);
-        drawRectangles(secondLargestContour, img);
-        
         int numGoals(1);
         if (largestArea[1] > 500 && secondLargestArea[1] > 500) {
             numGoals = 2;
         }
         
-        putText(img, std::to_string(numGoals), Point(img.cols/2, img.rows/2), FONT_HERSHEY_SIMPLEX, 4, Scalar(30, 30, 255), 3);
+        return numGoals;
     }
+    
+    return 0;
 }
 
 void test_hot()
 {
-    int curImgNum(1);
+    int twoGoals(0);
+    int oneGoal(0);
+    int noGoals(0);
+    const int totalGoals(6382);
     
-    for (;;) {
+    for (int curImgNum = 1; curImgNum <= totalGoals; ++curImgNum) {
         Mat img;
         String path(String("/Users/logan/roboimgs/downloaded/img") + std::to_string(curImgNum) + String(".jpg"));
         
         img = imread(path, CV_LOAD_IMAGE_COLOR);
-        detectHot(img);
+        int imgType(detectHot(img));
         
-        putText(img, std::to_string(curImgNum), Point(img.cols-140, img.rows-30), FONT_HERSHEY_SIMPLEX, 1.5, Scalar(30, 255, 30), 2);
-        imshow("img", img);
+        printf("img: %d\n", curImgNum);
+        
+        switch (imgType) {
+            case 2:
+                ++twoGoals;
+                break;
+            case 1:
+                ++oneGoal;
+            case 0:
+                ++noGoals;
+            default:
+                break;
+        }
         
         int pressed(waitKey(10));
         
         if (pressed == 27)
             return;
-        else if (pressed != -1 && curImgNum < 6382)
-            ++curImgNum;
     }
+    
+    printf("Two goals: %d of %d\n", twoGoals, totalGoals);
+    printf("One goal: %d of %d\n", oneGoal, totalGoals);
+    printf("No goals: %d of %d\n", noGoals, totalGoals);
 }
 
 int main()
 {
-    namedWindow("out");
-    namedWindow("img");
+    auto beginTime = std::chrono::high_resolution_clock::now();
     
     test_hot();
+    
+    auto endTime = std::chrono::high_resolution_clock::now();
+    auto duration = endTime - beginTime;
+    
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+    
+    printf("time elapsed (milliseconds): %lld\n", ms);
     
 	return 0;
 }
