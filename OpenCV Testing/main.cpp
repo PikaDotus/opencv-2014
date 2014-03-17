@@ -10,20 +10,13 @@
 #include "opencv2/opencv.hpp"
 #include <stdio.h>
 #include <chrono>
+#include <boost/thread.hpp>
 
 using namespace cv;
 
-void drawRectangles(vector<Point> contour, Mat dst) {
-    RotatedRect rect(minAreaRect(contour));
-    
-    // draw the rotated rectangle enclosing it
-    Point2f vertices[4];
-    rect.points(vertices);
-    
-    for (int k = 0; k < 4; ++k) {
-        line(dst, vertices[k], vertices[(k + 1) % 4], Scalar(0, 255, 255), 2);
-    }
-}
+int twoGoals(0);
+int oneGoal(0);
+int noGoals(0);
 
 // (my computer uses, opencv uses)
 // H: (0-360, 0-180)
@@ -31,8 +24,10 @@ void drawRectangles(vector<Point> contour, Mat dst) {
 // V: (0-100, 0-255)
 const float kH = 0.5, kS = 2.55, kV = 2.55;
 
-int detectHot(Mat &img)
+void detectHot(Mat &img)
 {
+    int imgType = 0;
+    
     // bounding values
     const float   hueLow = 170,   satLow = 17,    valLow = 90,
     hueHigh = 190,  satHigh = 95,   valHigh = 100;
@@ -77,45 +72,47 @@ int detectHot(Mat &img)
             numGoals = 2;
         }
         
-        return numGoals;
+        imgType = numGoals;
     }
     
-    return 0;
+    switch (imgType) {
+        case 2:
+            ++twoGoals;
+            break;
+        case 1:
+            ++oneGoal;
+        case 0:
+            ++noGoals;
+        default:
+            break;
+    }
+    
+    return;
 }
 
 void test_hot()
 {
-    int twoGoals(0);
-    int oneGoal(0);
-    int noGoals(0);
     const int totalGoals(6382);
+    
+    boost::thread_group threadGroup;
     
     for (int curImgNum = 1; curImgNum <= totalGoals; ++curImgNum) {
         Mat img;
         String path(String("/Users/logan/roboimgs/downloaded/img") + std::to_string(curImgNum) + String(".jpg"));
         
         img = imread(path, CV_LOAD_IMAGE_COLOR);
-        int imgType(detectHot(img));
+        
+        threadGroup.add_thread(new boost::thread(detectHot, img));
         
         printf("img: %d\n", curImgNum);
-        
-        switch (imgType) {
-            case 2:
-                ++twoGoals;
-                break;
-            case 1:
-                ++oneGoal;
-            case 0:
-                ++noGoals;
-            default:
-                break;
-        }
         
         int pressed(waitKey(10));
         
         if (pressed == 27)
             return;
     }
+    
+    threadGroup.join_all();
     
     printf("Two goals: %d of %d\n", twoGoals, totalGoals);
     printf("One goal: %d of %d\n", oneGoal, totalGoals);
