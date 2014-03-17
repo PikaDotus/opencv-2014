@@ -92,7 +92,7 @@ void detectHot(Mat &img)
 
 void test_hot()
 {
-    const int totalGoals(6382);
+    const int totalGoals(6382); // 6382 total
     
     boost::thread_group threadGroup;
     
@@ -114,9 +114,10 @@ void test_hot()
     
     threadGroup.join_all();
     
-    printf("Two goals: %d of %d\n", twoGoals, totalGoals);
-    printf("One goal: %d of %d\n", oneGoal, totalGoals);
-    printf("No goals: %d of %d\n", noGoals, totalGoals);
+    std::cout << std::endl;
+    printf("Two goals: %d of %d (%d%%)\n", twoGoals, totalGoals, (int)round(100*(float)twoGoals / (float)totalGoals));
+    printf("One goal: %d of %d (%d%%)\n", oneGoal, totalGoals, (int)round(100*(float)oneGoal / (float)totalGoals));
+    printf("No goals: %d of %d (%d%%)\n", noGoals, totalGoals, (int)round(100*(float)noGoals / (float)totalGoals));
 }
 
 int main()
