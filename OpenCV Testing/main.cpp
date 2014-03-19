@@ -116,8 +116,6 @@ void test_hot()
     printf("Two goals: %d of %d (%d%%)\n", twoGoals, totalGoals, (int)round(100*(float)twoGoals / (float)totalGoals));
     printf("One goal: %d of %d (%d%%)\n", oneGoal, totalGoals, (int)round(100*(float)oneGoal / (float)totalGoals));
     printf("No goals: %d of %d (%d%%)\n", noGoals, totalGoals, (int)round(100*(float)noGoals / (float)totalGoals));
-    
-    return;
 }
 
 int main()
@@ -131,7 +129,7 @@ int main()
     
     auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
     
-    printf("time elapsed (milliseconds): %lld\n", ms);
+    printf("\ntime elapsed (milliseconds): %lld\n\n", ms);
     
 	return 0;
 }
