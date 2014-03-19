@@ -90,46 +90,40 @@ void detectHot(Mat &img)
     return;
 }
 
-void enter_goal_type(int imgNum)
-{
-    Mat img;
-    String path(String("/Users/logan/roboimgs/downloaded/img") + std::to_string(imgNum) + String(".jpg"));
-    
-    img = imread(path, CV_LOAD_IMAGE_COLOR);
-    
-    detectHot(img);
-}
-
 void test_hot()
 {
-    const int totalGoals(6382); // 6382 total
+    VideoCapture vcap;
+    Mat img;
     
     boost::thread_group threads;
+    const std::string videoStreamAddress = "http://USER:PWD@IPADDRESS:8088/mjpeg.cgi?user=USERNAME&password=PWD&channel=0&.mjpg";
     
-    for (int curImgNum = 1; curImgNum <= totalGoals; ++curImgNum) {
-        threads.add_thread(new boost::thread(enter_goal_type, curImgNum));
+    if (!vcap.open(videoStreamAddress)) {
+        std::cout << "Error opening video stream or file" << std::endl;
+        return;
+    }
+
+    for (int i = 0; i < 10; ++i) {
+        if (!vcap.read(img)) {
+            std::cout << "No frame" << std::endl;
+            break;
+        }
+        
+        detectHot(img);
+        threads.add_thread(new boost::thread(detectHot, img));
     }
     
     threads.join_all();
-    
-    std::cout << std::endl;
-    printf("Two goals: %d of %d (%d%%)\n", twoGoals, totalGoals, (int)round(100*(float)twoGoals / (float)totalGoals));
-    printf("One goal: %d of %d (%d%%)\n", oneGoal, totalGoals, (int)round(100*(float)oneGoal / (float)totalGoals));
-    printf("No goals: %d of %d (%d%%)\n", noGoals, totalGoals, (int)round(100*(float)noGoals / (float)totalGoals));
 }
 
 int main()
 {
-    auto beginTime = std::chrono::high_resolution_clock::now();
-    
     test_hot();
     
-    auto endTime = std::chrono::high_resolution_clock::now();
-    auto duration = endTime - beginTime;
-    
-    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-    
-    printf("\ntime elapsed (milliseconds): %lld\n\n", ms);
+    const int totalGoals(twoGoals + oneGoal + noGoals);
+    printf("Two goals: %d of %d (%d%%)\n", twoGoals, totalGoals, (int)round(100*(float)twoGoals / (float)totalGoals));
+    printf("One goal: %d of %d (%d%%)\n", oneGoal, totalGoals, (int)round(100*(float)oneGoal / (float)totalGoals));
+    printf("No goals: %d of %d (%d%%)\n", noGoals, totalGoals, (int)round(100*(float)noGoals / (float)totalGoals));
     
 	return 0;
 }
