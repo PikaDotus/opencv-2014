@@ -11,10 +11,8 @@
 #include <stdio.h>
 #include <chrono>
 #include <boost/thread.hpp>
-//#include <chrono>
 #include <boost/asio.hpp>
 #include <boost/array.hpp>
-//#include <string>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 using boost::asio::ip::tcp;
@@ -98,17 +96,19 @@ void detectHot(Mat &img)
 
 void test_hot()
 {
-    VideoCapture vcap;
+    VideoCapture vcap(0);
     Mat img;
     
-    boost::thread_group threads;
-    const std::string videoStreamAddress =
-        "http://USER:PWD@IPADDRESS:8088/mjpeg.cgi?user=USERNAME&password=PWD&channel=0&.mjpg";
+    std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
     
-    if (!vcap.open(videoStreamAddress)) {
-        std::cout << "Error opening video stream or file" << std::endl;
-        return;
-    }
+    boost::thread_group threads;
+//    const std::string videoStreamAddress =
+//        "http://USER:PWD@IPADDRESS:8088/mjpeg.cgi?user=USERNAME&password=PWD&channel=0&.mjpg";
+    
+//    if (!vcap.open(videoStreamAddress)) {
+//        std::cout << "Error opening video stream or file" << std::endl;
+//        return;
+//    }
 
     // get 10 frames
     for (int i = 0; i < 10; ++i) {
@@ -122,16 +122,31 @@ void test_hot()
     }
     
     threads.join_all();
+    
+    
+    std::chrono::steady_clock::time_point then = std::chrono::steady_clock::now();
+    std::chrono::duration<float> time_taken = std::chrono::duration_cast<std::chrono::duration<float>>(now - then);
+    std::cout << "time taken: " << time_taken.count() << std::endl;
+}
+
+void printGoalStats()
+{
+    const int totalGoals(twoGoals + oneGoal + noGoals);
+    
+    std::cout << std::endl;
+    printf("Two goals: %d of %d (%d%%)\n", twoGoals, totalGoals,
+           (int)round(100*(float)twoGoals / (float)totalGoals));
+    printf("One goal: %d of %d (%d%%)\n", oneGoal, totalGoals,
+           (int)round(100*(float)oneGoal / (float)totalGoals));
+    printf("No goals: %d of %d (%d%%)\n", noGoals, totalGoals,
+           (int)round(100*(float)noGoals / (float)totalGoals));
+    std::cout << std::endl;
 }
 
 int main()
 {
-    unsigned short const PORT = 49153; // the port that the server listens on
-    const int MILLIS_TIL_AUTON = 100; // millis that we can look for hot goals
+    unsigned short const PORT = 3812; // the port that the server listens on (49153)
     boost::asio::io_service ioService;
-    // the start time
-    const std::chrono::steady_clock::time_point start =
-        std::chrono::steady_clock::now();
     
     // run the main program
     test_hot();
@@ -145,37 +160,18 @@ int main()
     try {
         tcp::acceptor acceptor(ioService, tcp::endpoint(tcp::v4(), PORT));
         
-        std::chrono::steady_clock::time_point now =
-            std::chrono::steady_clock::now();
-        std::chrono::duration<float> time_span =
-            std::chrono::duration_cast<std::chrono::duration<float>>(now - start);
+        // listen for clients
+        std::cout << "Listening for client..." << std::endl;
+        printGoalStats();
+        tcp::socket socket(ioService);
+        acceptor.accept(socket);
+        std::cout << "Client heard..." << std::endl;
         
-        // ensure that this only runs for the allotted time:
-        // if we haven't been contacted by then, it's too late
-        while (time_span.count() * 1000 < MILLIS_TIL_AUTON) { // converts to ms
-            now = std::chrono::steady_clock::now();
-            time_span = std::chrono::duration_cast<std::chrono::duration<float>>
-                (now - start);
-            
-            // listen for clients
-            std::cout << "Listening for client..." << std::endl;
-            tcp::socket socket(ioService);
-            acceptor.accept(socket);
-            std::cout << "Client heard..." << std::endl;
-            
-            // send string to client
-            boost::asio::write(socket, boost::asio::buffer(message));
-        }
+        // send string to client
+        boost::asio::write(socket, boost::asio::buffer(message));
     } catch (Exception e) {
         std::cerr << e.what() << std::endl;
     }
-    
-    printf("Two goals: %d of %d (%d%%)\n", twoGoals, totalGoals,
-           (int)round(100*(float)twoGoals / (float)totalGoals));
-    printf("One goal: %d of %d (%d%%)\n", oneGoal, totalGoals,
-           (int)round(100*(float)oneGoal / (float)totalGoals));
-    printf("No goals: %d of %d (%d%%)\n", noGoals, totalGoals,
-           (int)round(100*(float)noGoals / (float)totalGoals));
     
 	return 0;
 }
