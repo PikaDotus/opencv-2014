@@ -9,7 +9,6 @@
 #include <iostream>
 #include "opencv2/opencv.hpp"
 #include <stdio.h>
-#include <chrono>
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
 #include <boost/array.hpp>
@@ -111,22 +110,21 @@ void test_hot()
 //    }
 
     // get 10 frames
-    for (int i = 0; i < 10; ++i) {
+    for (int i = 0; i < 4; ++i) {
         if (!vcap.read(img)) {
             std::cout << "No frame" << std::endl;
             break;
         }
         
-        detectHot(img);
         threads.add_thread(new boost::thread(detectHot, img));
     }
     
     threads.join_all();
     
-    
     std::chrono::steady_clock::time_point then = std::chrono::steady_clock::now();
-    std::chrono::duration<float> time_taken = std::chrono::duration_cast<std::chrono::duration<float>>(now - then);
-    std::cout << "time taken: " << time_taken.count() << std::endl;
+    std::chrono::duration<float> time_taken =
+        std::chrono::duration_cast<std::chrono::duration<float>>(now - then);
+    std::cout << "time taken: " << time_taken.count() << std::endl << std::endl;
 }
 
 void printGoalStats()
@@ -145,7 +143,7 @@ void printGoalStats()
 
 int main()
 {
-    unsigned short const PORT = 3812; // the port that the server listens on (49153)
+    unsigned short const PORT = 1180; // the port that the server listens on (49153)
     boost::asio::io_service ioService;
     
     // run the main program
