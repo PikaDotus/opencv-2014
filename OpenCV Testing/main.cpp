@@ -82,7 +82,8 @@ void detectHot(Mat &img)
             numGoals = 2;
         }
         
-        putText(img, std::to_string(numGoals), Point(img.cols/2, img.rows/2), FONT_HERSHEY_SIMPLEX, 4, Scalar(30, 30, 255), 3);
+        putText(img, std::to_string(numGoals), Point(img.cols/2, img.rows/2)
+                , FONT_HERSHEY_SIMPLEX, 4, Scalar(30, 30, 255), 3);
     }
 }
 
@@ -92,26 +93,29 @@ void test_hot()
     
     for (;;) {
         Mat img;
-        String path(String("/Users/logan/roboimgs/downloaded/img") + std::to_string(curImgNum) + String(".jpg"));
+        String path(String("/Users/logan/roboimgs/downloaded/img")
+                    + std::to_string(curImgNum) + String(".jpg"));
         
         img = imread(path, CV_LOAD_IMAGE_COLOR);
         detectHot(img);
         
-        putText(img, std::to_string(curImgNum), Point(img.cols-140, img.rows-30), FONT_HERSHEY_SIMPLEX, 1.5, Scalar(30, 255, 30), 2);
+        putText(img, std::to_string(curImgNum), Point(img.cols-140, img.rows-30)
+                , FONT_HERSHEY_SIMPLEX, 1.5, Scalar(30, 255, 30), 2);
         imshow("img", img);
         
         int pressed(waitKey(10));
         
         if (pressed == 27)
             return;
-        else if (pressed != -1 && curImgNum < 6382)
+        else if (pressed == 63235 && curImgNum < 6382)
             ++curImgNum;
+        else if (pressed == 63234 && curImgNum > 0)
+            --curImgNum;
     }
 }
 
 int main()
 {
-    namedWindow("out");
     namedWindow("img");
     
     test_hot();
