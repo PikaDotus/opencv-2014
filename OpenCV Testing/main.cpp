@@ -97,7 +97,7 @@ void test_hot()
 {
     VideoCapture vcap(0);
     Mat img;
-    
+
     std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
     
     boost::thread_group threads;
